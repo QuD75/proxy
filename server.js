@@ -7,7 +7,7 @@ const app = express();
 app.use(cors());
 
 // Route pour intercepter les requêtes et transmettre le header Authorization
-app.get('/proxy', (req, res) => {
+app.get('/apimeteo', (req, res) => {
     const targetUrl = req.query.url;
     const username = 'quentin_dusserre_quentin';
     const password = 'nIg974UeEM';
