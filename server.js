@@ -10,7 +10,7 @@ app.get('/apimeteo', (req, res) => {
     const targetUrl = req.query.url;
     const username = process.env.USERNAME;
     const password = process.env.PASSWORD;
-    const encodedCredentials = btoa(`${username}:${password}`);
+    const encodedCredentials = Buffer.from(`${username}:${password}`).toString('base64');
     if (!targetUrl) {
         return res.status(400).send("URL cible manquante dans la requête.");
     }
