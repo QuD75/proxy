@@ -8,8 +8,8 @@ app.use(cors());
 
 app.get('/apimeteo', (req, res) => {
     const targetUrl = req.query.url;
-    const username = 'quentin_dusserre_quentin';
-    const password = 'nIg974UeEM';
+    const username = process.env.USERNAME;
+    const password = process.env.PASSWORD;
     const encodedCredentials = btoa(`${username}:${password}`);
     if (!targetUrl) {
         return res.status(400).send("URL cible manquante dans la requête.");
