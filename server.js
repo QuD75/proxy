@@ -4,6 +4,12 @@ const cors = require('cors');
 const app = express();
 const axios = require('axios');
 
+const dep = '44';
+const lat = '47.2917';
+const lon = '-2.5201';
+const paramsDay = 't_2m:C,precip_1h:mm,wind_speed_10m:ms,wind_gusts_10m_1h:ms,wind_dir_10m:d,msl_pressure:hPa,weather_symbol_1h:idx,uv:idx';
+const paramsWeek = 'sunrise:sql,sunset:sql,t_min_2m_24h:C,t_max_2m_24h:C,precip_24h:mm,wind_gusts_10m_24h:ms,msl_pressure:hPa,weather_symbol_24h:idx';
+
 // Activer CORS pour toutes les requêtes
 app.use(cors());
 
@@ -13,21 +19,11 @@ let cache = {
     meteoweek: null,
     vigilance: null
 };
-let cacheExpiration = {
-    meteoday: 0,
-    meteoweek: 0,
-    vigilance: 0
-};
 
 // Durée de validité du cache en millisecondes)
 const CACHE_DURATION_VIGILANCE = 60 * 60 * 1000;
 const CACHE_DURATION_METEOMATICS_DAY = 10 * 60 * 1000;
 const CACHE_DURATION_METEOMATICS_WEEK = 60 * 60 * 1000;
-
-// Fonction pour vérifier si le cache est encore valide
-function isCacheValid(service) {
-    return cache[service] && (Date.now() < cacheExpiration[service]);
-}
 
 // Fonction pour mettre à jour le cache
 function updateCache(service, data) {
@@ -36,121 +32,46 @@ function updateCache(service, data) {
     else if (service === 'meteoweek') duration = CACHE_DURATION_METEOMATICS_WEEK;
     else if (service === 'vigilance') duration = CACHE_DURATION_VIGILANCE;
     cache[service] = data;
-    cacheExpiration[service] = Date.now() + duration;
 }
 
-// Route pour l'API Meteomatics
-app.get('/meteoday', (req, res) => {
-    console.log("Call /meteoday");
-
-    if (isCacheValid('meteoday')) {
-        // Utiliser le cache si valide
-        return res.json(cache['meteoday']);
-    }
-
-    const targetUrl = req.query.url;
-    const username = process.env.USERNAME_METEOMATICS;
-    const password = process.env.PASSWORD_METEOMATICS;
-    const encodedCredentials = Buffer.from(`${username}:${password}`).toString('base64');
-
-    if (!targetUrl) {
-        return res.status(400).send("URL cible manquante dans la requête.");
-    }
-
-    request({
-        url: targetUrl,
-        headers: {
-            'Authorization': 'Basic ' + encodedCredentials,
-            'Content-Type': 'application/json'
-        },
-        json: true
-    }, (error, response, body) => {
-        if (error) {
-            console.error('Erreur lors de la requête :', error);
-            return res.status(500).send('Erreur lors de l\'appel de l\'API cible.');
-        }
-
-        // Mettre en cache la réponse
-        updateCache('meteoday', body);
-        res.json(body);
-    });
-});
-app.get('/meteoweek', (req, res) => {
-    console.log("Call /meteoweek");
-
-    if (isCacheValid('meteoweek')) {
-        // Utiliser le cache si valide
-        return res.json(cache['meteoweek']);
-    }
-
-    const targetUrl = req.query.url;
-    const username = process.env.USERNAME_METEOMATICS;
-    const password = process.env.PASSWORD_METEOMATICS;
-    const encodedCredentials = Buffer.from(`${username}:${password}`).toString('base64');
-
-    if (!targetUrl) {
-        return res.status(400).send("URL cible manquante dans la requête.");
-    }
-
-    request({
-        url: targetUrl,
-        headers: {
-            'Authorization': 'Basic ' + encodedCredentials,
-            'Content-Type': 'application/json'
-        },
-        json: true
-    }, (error, response, body) => {
-        if (error) {
-            console.error('Erreur lors de la requête :', error);
-            return res.status(500).send('Erreur lors de l\'appel de l\'API cible.');
-        }
-
-        // Mettre en cache la réponse
-        updateCache('meteoweek', body);
-        res.json(body);
-    });
-});
-
 // Route pour l'API de Vigilance Météo France
-app.get('/vigilance', (req, res) => {
+app.get('/vigilance', (res) => {
     console.log("Call /vigilance");
-
-    if (isCacheValid('vigilance')) {
-        // Utiliser le cache si valide
-        return res.json(cache['vigilance']);
-    }
-
-    const targetUrl = req.query.url;
-    const apiKey = process.env.API_KEY_VIGILANCE;
-
-    if (!targetUrl) {
-        return res.status(400).send("URL cible manquante dans la requête.");
-    }
-
-    request({
-        url: targetUrl,
-        headers: {
-            'apikey': apiKey
-        },
-        json: true
-    }, (error, response, body) => {
-        if (error) {
-            console.error('Erreur lors de la requête :', error);
-            return res.status(500).send('Erreur lors de l\'appel de l\'API cible.');
-        }
-
-        // Mettre en cache la réponse
-        updateCache('vigilance', body);
-        res.json(body);
-    });
+    return res.json(cache['vigilance']);
+});
+// Route pour l'API Meteomatics
+app.get('/meteoday', (res) => {
+    console.log("Call /meteoday");
+    return res.json(cache['meteoday']);
+});
+app.get('/meteoweek', (res) => {
+    console.log("Call /meteoweek");
+    return res.json(cache['meteoweek']);
 });
 
-// Fonction pour appeler le proxy et mettre à jour le cache périodiquement
+// Fonction pour mettre à jour le cache périodiquement
+async function refreshCacheVigilance() {
+    try {
+        console.log("Mise à jour du cache Vigilance...");
+        const vigilanceResponse = await axios.get(`https://public.opendatasoft.com/api/explore/v2.1/catalog/datasets/weatherref-france-vigilance-meteo-departement/records?where=domain_id%3D%22${dep}%22&limit=20E`);
+
+        updateCache('vigilance', vigilanceResponse.data);
+        console.log("Mise à jour du cache Vigilance OK !");
+
+    } catch (error) {
+        console.error('Erreur lors de la mise à jour du cache :', error);
+    }
+}
 async function refreshCacheMeteoDay() {
+
+    const currentDate = new Date();
+    const currentHour = new Date(currentDate);
+    currentHour.setMinutes(0, 0, 0);
+    const beginDateDay = currentHour.toISOString().split('.')[0] + 'Z';
+
     try {
         console.log("Mise à jour du cache Meteo Matics Day...");
-        const meteodayUrl = "URL_DE_L_API_METEOMATICS";  // Remplace par l'URL réelle
-        const meteodayResponse = await axios.get(`http://localhost:${process.env.PORT}/apimeteo?url=${encodeURIComponent(meteodayUrl)}`);
+        const meteodayResponse = await axios.get(`https://api.meteomatics.com/${beginDateDay}PT23H:PT1H/${paramsDay}/${lat},${lon}/json`);
 
         updateCache('meteoday', meteodayResponse.data);
         console.log("Mise à jour du cache Meteo Matics Day OK !");
@@ -160,26 +81,21 @@ async function refreshCacheMeteoDay() {
     }
 }
 async function refreshCacheMeteoWeek() {
+
+    const currentDate = new Date();
+    const currentHour = new Date(currentDate);
+    currentHour.setMinutes(0, 0, 0);
+    const nextDayMidnight = new Date(currentDate);
+    nextDayMidnight.setHours(0, 0, 0, 0);
+    nextDayMidnight.setDate(nextDayMidnight.getDate() + 1);
+    const beginDateWeek = nextDayMidnight.toISOString().split('.')[0] + 'Z';
+
     try {
         console.log("Mise à jour du cache Meteo Matics Week...");
-        const meteoweekUrl = "URL_DE_L_API_METEOMATICS";  // Remplace par l'URL réelle
-        const meteoweekResponse = await axios.get(`http://localhost:${process.env.PORT}/apimeteo?url=${encodeURIComponent(meteoweekUrl)}`);
+        const meteoweekResponse = await axios.get(`https://api.meteomatics.com/${beginDateWeek}P6D:P1D/${paramsWeek}/${lat},${lon}/json`);
 
         updateCache('meteoweek', meteoweekResponse.data);
         console.log("Mise à jour du cache Meteo Matics Week OK !");
-
-    } catch (error) {
-        console.error('Erreur lors de la mise à jour du cache :', error);
-    }
-}
-async function refreshCacheVigilance() {
-    try {
-        console.log("Mise à jour du cache Vigilance...");
-        const vigilanceUrl = "URL_DE_L_API_METEOFRANCE";  // Remplace par l'URL réelle
-        const vigilanceResponse = await axios.get(`http://localhost:${process.env.PORT}/meteofrance?url=${encodeURIComponent(vigilanceUrl)}`);
-
-        updateCache('vigilance', vigilanceResponse.data);
-        console.log("Mise à jour du cache Vigilance OK !");
 
     } catch (error) {
         console.error('Erreur lors de la mise à jour du cache :', error);
