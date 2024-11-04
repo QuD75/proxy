@@ -25,7 +25,7 @@ let cache = {
 
 // Durée de validité du cache en millisecondes)
 const CACHE_DURATION_VIGILANCE = 60 * 60 * 1000;
-const CACHE_DURATION_METEOMATICS_DAY = 15 * 60 * 1000;
+const CACHE_DURATION_METEOMATICS_DAY = 10 * 60 * 1000;
 const CACHE_DURATION_METEOMATICS_WEEK = 60 * 60 * 1000;
 
 // Route pour l'API de Vigilance Météo France
