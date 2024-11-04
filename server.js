@@ -28,26 +28,17 @@ const CACHE_DURATION_VIGILANCE = 60 * 60 * 1000;
 const CACHE_DURATION_METEOMATICS_DAY = 10 * 60 * 1000;
 const CACHE_DURATION_METEOMATICS_WEEK = 60 * 60 * 1000;
 
-// Fonction pour mettre à jour le cache
-function updateCache(service, data) {
-    let duration;
-    if (service === 'meteoday') duration = CACHE_DURATION_METEOMATICS_DAY;
-    else if (service === 'meteoweek') duration = CACHE_DURATION_METEOMATICS_WEEK;
-    else if (service === 'vigilance') duration = CACHE_DURATION_VIGILANCE;
-    cache[service] = data;
-}
-
 // Route pour l'API de Vigilance Météo France
-app.get('/vigilance', (res) => {
+app.get('/vigilance', async (req, res) => {
     console.log("Call /vigilance");
     return res.json(cache['vigilance']);
 });
 // Route pour l'API Meteomatics
-app.get('/meteoday', (res) => {
+app.get('/meteoday', async (req, res) => {
     console.log("Call /meteoday");
     return res.json(cache['meteoday']);
 });
-app.get('/meteoweek', (res) => {
+app.get('/meteoweek', async (req, res) => {
     console.log("Call /meteoweek");
     return res.json(cache['meteoweek']);
 });
@@ -58,7 +49,7 @@ async function refreshCacheVigilance() {
         console.log("Mise à jour du cache Vigilance...");
         const vigilanceResponse = await axios.get(`https://public.opendatasoft.com/api/explore/v2.1/catalog/datasets/weatherref-france-vigilance-meteo-departement/records?where=domain_id=${dep}&limit=20`);
 
-        updateCache('vigilance', vigilanceResponse.data);
+        cache['vigilance'] = vigilanceResponse.data;
         console.log("Mise à jour du cache Vigilance OK !");
 
     } catch (error) {
@@ -80,7 +71,7 @@ async function refreshCacheMeteoDay() {
             }
         });
 
-        updateCache('meteoday', meteodayResponse.data);
+        cache['meteoday'] = meteodayResponse.data;
         console.log("Mise à jour du cache Meteo Matics Day OK !");
 
     } catch (error) {
@@ -106,7 +97,7 @@ async function refreshCacheMeteoWeek() {
             }
         });
 
-        updateCache('meteoweek', meteoweekResponse.data);
+        cache['meteoweek'] = meteoweekResponse.data;
         console.log("Mise à jour du cache Meteo Matics Week OK !");
 
     } catch (error) {
