@@ -54,7 +54,7 @@ app.get('/meteofrance', (req, res) => {
 async function callProxy() {
     console.log("Call proxy");
     try {
-        const response = await axios.get('https://votre-proxy.render.com/endpoint');
+        const response = await axios.get('https://proxy-ddj0.onrender.com/apimeteo');
     } catch (error) {
         console.error('Erreur lors de l\'appel du proxy :', error);
     }
