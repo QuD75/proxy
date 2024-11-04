@@ -115,7 +115,12 @@ async function refreshCacheMeteoWeek() {
     }
 }
 
-// Rafraîchir le cache
+// Rafraîchir le cache au lancement du serveur
+refreshCacheVigilance();
+refreshCacheMeteoDay();
+refreshCacheMeteoWeek();
+
+// Rafraîchir le cache périodiquement
 setInterval(refreshCacheVigilance, CACHE_DURATION_VIGILANCE);
 setInterval(refreshCacheMeteoDay, CACHE_DURATION_METEOMATICS_DAY);
 setInterval(refreshCacheMeteoWeek, CACHE_DURATION_METEOMATICS_WEEK);
