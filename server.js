@@ -50,18 +50,21 @@ app.get('/meteofrance', (req, res) => {
     }).pipe(res);
 });
 
+app.get('/health', (req, res) => {
+    console.log("Call /health");
+});
+
 // Fonction pour appeler le proxy
 async function callProxy() {
-    console.log("Call proxy");
     try {
-        const response = await axios.get('https://proxy-ddj0.onrender.com/apimeteo');
+        const response = await axios.get('https://proxy-ddj0.onrender.com/health');
     } catch (error) {
         console.error('Erreur lors de l\'appel du proxy :', error);
     }
 }
 
-// Appeler la fonction callProxy toutes les 5 minutes (300000 ms)
-setInterval(callProxy, 300000);
+// Appeler la fonction callProxy toutes les 10 minutes
+setInterval(callProxy, 600000);
 
 // Lancer le serveur sur le port par défaut de Render (ou 3000 en local)
-app.listen(process.env.PORT, () => console.log("Proxy CORS en ligne !"));
+app.listen(process.env.PORT, () => console.log("Proxy en ligne !"));
