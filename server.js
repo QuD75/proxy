@@ -10,6 +10,10 @@ const lon = '-2.5201';
 const paramsDay = 't_2m:C,precip_1h:mm,wind_speed_10m:ms,wind_gusts_10m_1h:ms,wind_dir_10m:d,msl_pressure:hPa,weather_symbol_1h:idx,uv:idx';
 const paramsWeek = 'sunrise:sql,sunset:sql,t_min_2m_24h:C,t_max_2m_24h:C,precip_24h:mm,wind_gusts_10m_24h:ms,msl_pressure:hPa,weather_symbol_24h:idx';
 
+const username = process.env.USERNAME_METEOMATICS;
+const password = process.env.PASSWORD_METEOMATICS;
+const encodedCredentials = Buffer.from(`${username}:${password}`).toString('base64');
+
 // Activer CORS pour toutes les requêtes
 app.use(cors());
 
@@ -71,7 +75,11 @@ async function refreshCacheMeteoDay() {
 
     try {
         console.log("Mise à jour du cache Meteo Matics Day...");
-        const meteodayResponse = await axios.get(`https://api.meteomatics.com/${beginDateDay}PT23H:PT1H/${paramsDay}/${lat},${lon}/json`);
+        const meteodayResponse = await axios.get(`https://api.meteomatics.com/${beginDateDay}PT23H:PT1H/${paramsDay}/${lat},${lon}/json`, {
+            headers: {
+                'Authorization': 'Basic ' + encodedCredentials
+            }
+        });
 
         updateCache('meteoday', meteodayResponse.data);
         console.log("Mise à jour du cache Meteo Matics Day OK !");
@@ -92,7 +100,12 @@ async function refreshCacheMeteoWeek() {
 
     try {
         console.log("Mise à jour du cache Meteo Matics Week...");
-        const meteoweekResponse = await axios.get(`https://api.meteomatics.com/${beginDateWeek}P6D:P1D/${paramsWeek}/${lat},${lon}/json`);
+
+        const meteoweekResponse = await axios.get(`https://api.meteomatics.com/${beginDateWeek}P6D:P1D/${paramsWeek}/${lat},${lon}/json`, {
+            headers: {
+                'Authorization': 'Basic ' + encodedCredentials
+            }
+        });
 
         updateCache('meteoweek', meteoweekResponse.data);
         console.log("Mise à jour du cache Meteo Matics Week OK !");
