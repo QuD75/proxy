@@ -56,7 +56,7 @@ app.get('/meteoweek', (res) => {
 async function refreshCacheVigilance() {
     try {
         console.log("Mise à jour du cache Vigilance...");
-        const vigilanceResponse = await axios.get(`https://public.opendatasoft.com/api/explore/v2.1/catalog/datasets/weatherref-france-vigilance-meteo-departement/records?where=domain_id%3D%22${dep}%22&limit=20E`);
+        const vigilanceResponse = await axios.get(`https://public.opendatasoft.com/api/explore/v2.1/catalog/datasets/weatherref-france-vigilance-meteo-departement/records?where=domain_id=${dep}&limit=20`);
 
         updateCache('vigilance', vigilanceResponse.data);
         console.log("Mise à jour du cache Vigilance OK !");
