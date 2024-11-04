@@ -7,6 +7,7 @@ const app = express();
 app.use(cors());
 
 app.get('/apimeteo', (req, res) => {
+    console.log("Call /apimeteo");
     const targetUrl = req.query.url;
     const username = process.env.USERNAME_METEOMATICS;
     const password = process.env.PASSWORD_METEOMATICS;
@@ -24,6 +25,7 @@ app.get('/apimeteo', (req, res) => {
 });
 
 app.get('/meteofrance', (req, res) => {
+    console.log("Call /meteofrance");
     const targetUrl = req.query.url;
     const apiKey = process.env.API_KEY_METEOFRANCE;
     if (!targetUrl) {
